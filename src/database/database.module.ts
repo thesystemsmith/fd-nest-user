@@ -1,7 +1,7 @@
 import { Module, Logger } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { getDatabaseConfig } from '../config/database.config';
-import type { Connection } from 'mongoose';
+import { ConnectionStates, type Connection } from 'mongoose';
 
 @Module({
   imports: [
@@ -21,16 +21,26 @@ import type { Connection } from 'mongoose';
           uri,
           // Connection event handlers
           connectionFactory: (connection: Connection) => {
-            connection.on('connected', () => {
+            const logConnected = () =>
               logger.log('✅ MongoDB connected successfully');
-            });
+
+            // Initial connect
+            connection.once('open', logConnected);
+
+            // Subsequent reconnects
+            connection.on('connected', logConnected);
+
+            // If it was already connected before listeners were attached
+            if (connection.readyState === ConnectionStates.connected) {
+              logConnected();
+            }
 
             connection.on('disconnected', () => {
-              logger.log('❌ MongoDB disconnected');
+              logger.warn('❌ MongoDB disconnected');
             });
 
             connection.on('error', (error) => {
-              logger.error('🔥 MongoDB connection error:', error);
+              logger.error(`🔥 MongoDB connection error: ${error}`);
             });
 
             return connection;

@@ -9,6 +9,7 @@ const DEFAULTS = {
   host: '127.0.0.1',
   port: '27017',
   dbName: 'food-delivery-users',
+  authSource: 'admin',
 } as const;
 
 const normalize = (value: string | undefined): string | undefined => {
@@ -30,8 +31,19 @@ export const getDatabaseConfig = (): DatabaseConfig => {
   const host = normalize(process.env.MONGODB_HOST) ?? DEFAULTS.host;
   const port = normalize(process.env.MONGODB_PORT) ?? DEFAULTS.port;
   const dbName = normalize(process.env.MONGODB_DB) ?? DEFAULTS.dbName;
+  const username = normalize(process.env.MONGODB_USERNAME);
+  const password = normalize(process.env.MONGODB_PASSWORD);
+  const authSource =
+    normalize(process.env.MONGODB_AUTH_SOURCE) ?? DEFAULTS.authSource;
+
+  const credentials =
+    username && password
+      ? `${encodeURIComponent(username)}:${encodeURIComponent(password)}@`
+      : '';
+
+  const authSourceSuffix = credentials ? `?authSource=${authSource}` : '';
 
   return {
-    uri: `mongodb://${host}:${port}/${dbName}`,
+    uri: `mongodb://${credentials}${host}:${port}/${dbName}${authSourceSuffix}`,
   };
 };
