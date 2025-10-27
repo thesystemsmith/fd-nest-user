@@ -1,98 +1,72 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+my raw blueprint of designing the full stack kafka based app for food delivery product is as follows
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Service Responsibilities
+Spring Boot Backend (Port 8080) - Order & Payment Service
 
-## Description
+Order CRUD operations
+Payment simulation (approve/reject)
+Order status management
+Consumes: user.created, user.updated (to cache user data)
+Publishes: order.created, order.updated, payment.processed
+Database: PostgreSQL
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+NestJS Backend (Port 3000) - User & Auth Service
 
-## Project setup
+User registration & login
+JWT token generation/validation
+User profile management (CRUD)
+Notification service (email simulation)
+Publishes: user.created, user.updated
+Consumes: order.created, order.updated (to send notifications)
+Database: MongoDB
 
-```bash
-$ npm install
+React Frontend
+
+Login/Register with JWT
+Role-based views (USER vs ADMIN)
+User Dashboard: View own orders, profile
+Admin Dashboard: Manage all orders, view all users
+JWT stored in localStorage with expiry check
+
+Kafka Topics
+
+user.created - New user registered
+user.updated - Profile updated
+order.created - New order placed
+order.updated - Order status changed (pending → paid → shipped → delivered)
+payment.processed - Payment approved/rejected
+
+
+🔐 Authentication Flow
+1. User registers → NestJS creates user → Publishes user.created
+2. User logs in → NestJS validates → Returns JWT (access + refresh tokens)
+3. Frontend stores JWT → Sends with every request
+4. Spring Boot validates JWT by calling NestJS /auth/verify endpoint
+   OR both services share same JWT secret (simpler for demo)
+5. JWT contains: { userId, email, role: 'USER' | 'ADMIN' }
 ```
 
-## Compile and run the project
+---
 
-```bash
-# development
-$ npm run start
+## 📊 Complete Event Flow Examples
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+### **Scenario 1: User Places Order**
+```
+1. Frontend (USER) → POST /api/orders → Spring Boot
+2. Spring Boot creates order → Publishes order.created to Kafka
+3. NestJS consumes order.created → Sends email: "Order confirmed"
 ```
 
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+### **Scenario 2: Admin Updates Order Status**
+```
+1. Frontend (ADMIN) → PATCH /api/orders/:id/status → Spring Boot
+2. Spring Boot updates order → Publishes order.updated to Kafka
+3. NestJS consumes order.updated → Sends email: "Order shipped"
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+### **Scenario 3: User Updates Profile**
 ```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+1. Frontend → PATCH /api/users/profile → NestJS
+2. NestJS updates user → Publishes user.updated to Kafka
+3. Spring Boot consumes user.updated → Updates cached user data
