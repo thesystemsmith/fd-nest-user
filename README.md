@@ -75,3 +75,4 @@ payment.processed - Payment approved/rejected
 
 - im using flat repo style as am the only one working on this project and dont want multiple folders, but for a bigger project its better to follow nest idiom based repo style as splitting task in a bigger team bigger team becomes easier
 
+- using only access token with 7 days exp, but better UX is refresh token, if i feel ill add this later, for now keeping it simple
