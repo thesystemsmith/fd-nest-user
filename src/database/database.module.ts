@@ -15,14 +15,14 @@ import { ConnectionStates, type Connection } from 'mongoose';
 
         //use nest logger instead of console
         const logger = new Logger('DatabaseModule');
-        logger.log(`🔌 Attempting to connect to MongoDB: ${uri}`);
+        logger.log(`🛜 🛜 🛜 Attempting to connect to MongoDB: ${uri}`);
 
         return {
           uri,
           // Connection event handlers
           connectionFactory: (connection: Connection) => {
             const logConnected = () =>
-              logger.log('✅ MongoDB connected successfully');
+              logger.log('🚀🚀🚀 MongoDB connected successfully');
 
             // Initial connect
             connection.once('open', logConnected);

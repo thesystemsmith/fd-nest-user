@@ -70,3 +70,8 @@ payment.processed - Payment approved/rejected
 1. Frontend → PATCH /api/users/profile → NestJS
 2. NestJS updates user → Publishes user.updated to Kafka
 3. Spring Boot consumes user.updated → Updates cached user data
+
+##########################################
+
+- im using flat repo style as am the only one working on this project and dont want multiple folders, but for a bigger project its better to follow nest idiom based repo style as splitting task in a bigger team bigger team becomes easier
+

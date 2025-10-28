@@ -26,4 +26,4 @@ async function bootstrap() {
   console.log(`🚀 User Service running on http://localhost:${port}`);
 }
 
-bootstrap();
+void bootstrap();
